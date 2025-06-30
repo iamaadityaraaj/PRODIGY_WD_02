@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TimeTracker</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      background: #0e0e0e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #f0f0f0;
+    }
+    .time-wrapper {
+      width: 320px;
+      padding: 30px;
+      background: #202020;
+      border-radius: 12px;
+      box-shadow: 0 0 18px rgba(0,0,0,0.6);
+      text-align: center;
+    }
+    .time-display {
+      font-size: 2.5rem;
+      margin: 15px 0;
+    }
+    .control-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+    .control-row button {
+      flex: 1 1 48%;
+      margin: 5px 0;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .go { background-color: #27ae60; color: #fff; }
+    .pause { background-color: #e74c3c; color: #fff; }
+    .lap { background-color: #f1c40f; color: #000; }
+    .clear { background-color: #2980b9; color: #fff; }
+    .laps-record {
+      text-align: left;
+      max-height: 160px;
+      overflow-y: auto;
+      background: #1a1a1a;
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 0.95rem;
+    }
+    .laps-record div {
+      padding: 4px 0;
+      border-bottom: 1px solid #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="time-wrapper">
+    <h2>TimeTracker</h2>
+    <div class="time-display" id="tracker">00:00:00.00</div>
+    <div class="control-row">
+      <button class="go" id="run">Start</button>
+      <button class="pause" id="halt">Stop</button>
+      <button class="lap" id="mark">Lap</button>
+      <button class="clear" id="clear">Reset</button>
+    </div>
+    <div class="laps-record" id="lapList"></div>
+  </div>
+
+  <script>
+    let launchTime, nowTime, timeDelta, ticker = null;
+    let ticking = false;
+
+    const tracker = document.querySelector("#tracker");
+    const lapLog = document.querySelector("#lapList");
+    const runBtn = document.querySelector("#run");
+    const haltBtn = document.querySelector("#halt");
+    const markBtn = document.querySelector("#mark");
+    const clearBtn = document.querySelector("#clear");
+
+    const computeTime = () => {
+      nowTime = Date.now() - launchTime;
+      const hrs = Math.floor(nowTime / 3600000);
+      const mins = Math.floor((nowTime % 3600000) / 60000);
+      const secs = Math.floor((nowTime % 60000) / 1000);
+      const ms = Math.floor((nowTime % 1000) / 10);
+      const format = val => val.toString().padStart(2, '0');
+      tracker.textContent = `${format(hrs)}:${format(mins)}:${format(secs)}.${format(ms)}`;
+    };
+
+    runBtn.onclick = () => {
+      if (!ticking) {
+        launchTime = Date.now() - (timeDelta || 0);
+        ticker = setInterval(computeTime, 10);
+        ticking = true;
+      }
+    };
+
+    haltBtn.onclick = () => {
+      if (ticking) {
+        clearInterval(ticker);
+        timeDelta = Date.now() - launchTime;
+        ticking = false;
+      }
+    };
+
+    clearBtn.onclick = () => {
+      clearInterval(ticker);
+      tracker.textContent = "00:00:00.00";
+      ticking = false;
+      timeDelta = 0;
+      lapLog.innerHTML = "";
+    };
+
+    markBtn.onclick = () => {
+      if (ticking) {
+        const snap = document.createElement("div");
+        snap.textContent = `Lap ${lapLog.children.length + 1} → ${tracker.textContent}`;
+        lapLog.appendChild(snap);
+      }
+    };
+  </script>
+</body>
+</html>
